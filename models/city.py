@@ -1,21 +1,33 @@
-#!/usr/bin/env python3
-"""Defines the City class."""
-from models.base_model import Base, BaseModel
-from sqlalchemy import Column, ForeignKey, String
-from sqlalchemy.orm import relationship
+import models.base_model
+from models.base_model import BaseModel
 
 
-class City(BaseModel, Base):
-    """Represents a city for a MySQL database.
-
-    Inherits from SQLAlchemy Base and links to the MySQL table cities.
-
-    Attributes:
-        __tablename__ (str): The name of the MySQL table to store Cities.
-        name (sqlalchemy String): The name of the City.
-        state_id (sqlalchemy String): The state id of the City.
+class City(BaseModel):
     """
-    __tablename__ = "cities"
-    name = Column(String(128), nullable=False)
-    state_id = Column(String(60), ForeignKey("states.id"), nullable=False)
-    places = relationship("Place", backref="cities", cascade="delete")
+    Represents a city, which is a geographical location that contains places.
+    """
+    name = ""
+    state_id = ""
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes a new City instance.
+        """
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        """
+        Returns a string representation of the City instance.
+        """
+        return "[{}] ({}) {}".format(type(self).__name__, self.id, self.__dict__)
+
+    def to_dict(self):
+        """
+        Returns a dictionary representation of the City instance.
+        """
+        dictionary = {}
+        for key, value in self.__dict__.items():
+            if key != "_sa_instance_state":
+                dictionary[key] = value
+        dictionary["__class__"] = type(self).__name__
+        return dictionary

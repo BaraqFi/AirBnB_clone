@@ -1,35 +1,47 @@
-#!/usr/bin/env python3
-"""Defines the State class."""
-import models
-from models.base_model import Base, BaseModel
-from models.city import City
-from os import getenv
-from sqlalchemy import Column, String
-from sqlalchemy.orm import relationship
+from models.base_model import BaseModel
+from models.engine.file_storage import FileStorage
 
+class State(BaseModel):
+    """Represents a state"""
 
-class State(BaseModel, Base):
-    """Represents a state for a MySQL database.
+    name = ""
 
-    Inherits from SQLAlchemy Base and links to the MySQL table states.
+    def __init__(self, *args, **kwargs):
+        """Initialize a new State"""
 
-    Attributes:
-        __tablename__ (str): The name of the MySQL table to store States.
-        name (sqlalchemy String): The name of the State.
-        cities (sqlalchemy relationship): The State-City relationship.
-    """
-    __tablename__ = "states"
-    name = Column(String(128), nullable=False)
+        super().__init__(*args, **kwargs)
 
-    if getenv("ABNB_TYPE_STORAGE") == "db":
-        cities = relationship("City",  backref="state", cascade="delete")
+    @property
+    def cities(self):
+        """
+        Getter method that returns a list of City instances
+        where the city's state_id attribute matches the id
+        attribute of the current State instance.
+        """
+        from models.city import City
+        from models import storage
 
-    else:
-        @property
-        def cities(self):
-            """Get a list of all related City objects."""
-            city_list = []
-            for city in list(models.storage.all(City).values()):
-                if city.state_id == self.id:
-                    city_list.append(city)
-            return city_list
+        cities = []
+
+        for city in storage.all(City).values():
+            if city.state_id == self.id:
+                cities.append(city)
+
+        return cities
+
+    def __str__(self):
+        """Return a string representation of a State"""
+
+        return "[State] ({}) {}".format(self.id, self.__dict__)
+
+# Create a new instance of the FileStorage class
+storage = FileStorage()
+
+# Reload any previously-saved instances of the State class
+storage.reload()
+
+# You can now use the State class and the FileStorage instance to create, modify, and save instances of the State class to the file storage database. For example:
+new_state = State()
+new_state.name = "California"
+storage.new(new_state)
+storage.save()
